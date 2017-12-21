@@ -1,41 +1,28 @@
 import { Observable } from 'rxjs/Observable';
 import 'rxjs';
-import 'rxjs/add/observable/of';
-import 'rxjs/add/observable/from';
-import 'rxjs/add/operator/map';
-import 'rxjs/add/operator/combineLatest';
+import { Subject } from 'rxjs';
+import CacheObservable from './cache.decorator';
 
-let a1 = Observable.of({a: 1}).delay(1000).do(() => {
-    console.log('first');
-})
+class Ttt {
 
+    oneSecondInterval = Observable.interval(500);
 
-let a2 = Observable.of(2).delay(2000).do(() => {
-    console.log('second');
-})
+    @CacheObservable()
+    test() {
+        return Observable.of(+new Date());
+    }
 
+    constructor() {
+        this.oneSecondInterval.subscribe(d => {
+            console.log('-->', d);
 
-let a3 = Observable.of({ a: 3 }).delay(3000).do(() => {
-    console.log('third');
-})
+            this.test().subscribe(t => console.log('T ', t));
 
+        });
+    }
 
-// Observable.concat(a1, a2, a3)
-//     .pluck('a')
-//     .subscribe(r => console.log(r));
+}
 
-// let t = [];
-// Observable
-//     .ajax('https://jsonplaceholder.typicode.com/posts')
-//     .map(e => e.response)
-//     .subscribe(res => {
-//         console.log(res);
-//     })
+let a = new Ttt();
 
 
-// The serial variant of combineLatest
-Observable
-    .from([a1, a2, a3])
-    .concatMap(r => r)
-    .toArray()
-    .subscribe(r => console.log(r));
