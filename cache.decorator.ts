@@ -1,4 +1,6 @@
 import 'rxjs/add/operator/publishReplay';
+import 'rxjs';
+import { Observable } from 'rxjs/Observable';
 
 /**
  * Storage for cached functions
@@ -22,18 +24,27 @@ export default function CacheObservable(ms: number = 1000) {
 
         descriptor.value = function (...args) {
 
-            const cacheKey = `${className}:${methodName}:${JSON.stringify(args)}`;
+            const cacheKey: string = `${className}:${methodName}:${JSON.stringify(args)}`;
 
-            const entry = storage[cacheKey];
+            const entry: Observable<any> = storage[cacheKey];
+
+            let error: boolean = false;
+
             if (entry) {
                 return entry;
             }
 
             storage[cacheKey] = originalMethod.apply(this, args)
-                .catch(error => originalMethod)
+                .catch(() => {
+                    this.error = true;
+                    return originalMethod;
+                })
                 .publishReplay(1, ms)
                 .refCount()
                 .take(1);
+            if (error) {
+                return originalMethod;
+            }
             return storage[cacheKey];
         };
         return descriptor;
