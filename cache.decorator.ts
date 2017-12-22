@@ -5,7 +5,12 @@ import { Observable } from 'rxjs/Observable';
 /**
  * Storage for cached functions
  */
-const storage = {};
+class StorageItem {
+    error: boolean = false;
+    data$: Observable<any>
+}
+
+const storage: { [index: string]: StorageItem } = {};
 
 /**
  * Cache Observable function for ms milliseconds
@@ -25,27 +30,23 @@ export default function CacheObservable(ms: number = 1000) {
         descriptor.value = function (...args) {
 
             const cacheKey: string = `${className}:${methodName}:${JSON.stringify(args)}`;
-
-            const entry: Observable<any> = storage[cacheKey];
-
-            let error: boolean = false;
-
-            if (entry) {
-                return entry;
+            const entry = storage[cacheKey];
+            if (entry && !entry.error) {
+                return entry.data$;
             }
 
-            storage[cacheKey] = originalMethod.apply(this, args)
+            storage[cacheKey] = new StorageItem();
+
+            storage[cacheKey].data$ = originalMethod.apply(this, args)
                 .catch(() => {
-                    this.error = true;
+                    storage[cacheKey].error = true;
                     return originalMethod;
                 })
                 .publishReplay(1, ms)
                 .refCount()
                 .take(1);
-            if (error) {
-                return originalMethod;
-            }
-            return storage[cacheKey];
+
+            return storage[cacheKey].error ? originalMethod : storage[cacheKey].data$;
         };
         return descriptor;
     };

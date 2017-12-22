@@ -40,6 +40,13 @@ class Ttt {
                 this.url = 'https://api.github.com/search/repositories?q=tetris+language:assembly&sort=stars&order=desc';
             }
 
+            if (d === 20) {
+                this.url = 'https://dev.toyou.delivery/user/mgmt/v1/users?page=0&size=10&enabled=true';
+            }
+
+            if (d === 30) {
+                this.url = 'https://api.github.com/search/repositories?q=tetris+language:assembly&sort=stars&order=desc';
+            }
 
 
             this.test().subscribe(t => console.log('T ', t));
